@@ -11,4 +11,6 @@ dependencies = [
     "pandas>=2.3.3",
     "pybaseball>=2.2.7",
     "python-dotenv>=1.2.1",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
 ]

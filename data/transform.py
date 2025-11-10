@@ -1,12 +1,13 @@
+import os
+import math
 import pandas as pd
 import numpy as np
-import math
 
 import matplotlib.pyplot as plt
 
-year = '2022'
-def transform_raw_data(year):
-    data = pd.read_parquet(f'../data/data_{year}.parquet')
+
+def transform_raw_data(year, raw_data_path, intermediate_path):
+    data = pd.read_parquet(raw_data_path)
 
     data_columns = ['date', 'dayofweek', 'away_team', 'away_game_number', 'away_league', 'home_team', 'home_game_number', 'home_league', \
                     'home_score', 'away_score', 'park_id', 'away_P_id', 'home_P_id']
@@ -78,7 +79,7 @@ def transform_raw_data(year):
     df_merged['home_won'] = (df_merged['home_score']>df_merged['away_score']).astype(int)
     df_current = df_merged[data_columns+['home_OPS', 'home_FIP', 'home_FPCT', 'away_OPS', 'away_FIP', 'away_FPCT', 'home_won']]
 
-    df_current.to_parquet(f'cumsum_season_{year}')
+    df_current.to_parquet(intermediate_path)
 
     last_idx = team_df.groupby("team")["game_number"].idxmax()
     df_season = team_df.loc[last_idx].reset_index(drop=True)
@@ -88,9 +89,21 @@ def transform_raw_data(year):
     df_season_p = pitcher_df.loc[last_idx_p].reset_index(drop=True)
     df_season_p['season'] = year
 
-return (df_season, df_season_p)
+    return (df_season, df_season_p)
 
 if __name__ == "__main__":
-    year_list = ['2022', '2023' '2024']
+    year_list = ['2022', '2023', '2024']
+    df_season = pd.DataFrame()
+    df_season_p = pd.DataFrame()
+    if not os.path.exists('intermediate/'):
+        os.mkdir('intermediate/')
     for year in year_list:
-        transform_raw_data(year)
+        raw_data_path = f'raw/data_{year}.parquet'
+        intermediate_path = f'intermediate/cumsum_season_{year}.parquet'
+        df_season_year, df_season_p_year = transform_raw_data(
+            year, raw_data_path, intermediate_path)
+        df_season = pd.concat([df_season, df_season_year], ignore_index=True)
+        df_season_p = pd.concat([df_season_p, df_season_p_year], ignore_index=True)
+    df_season.to_parquet('intermediate/team_season.parquet')
+    df_season_p.to_parquet('intermediate/pitcher_season.parquet')
+

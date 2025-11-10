@@ -51,5 +51,6 @@ for year in ["2022", "2023", "2024"]:
 
         df = pd.read_csv(url, header=None, usecols=col_indices)
         df.columns = col_names
-
-        df.to_parquet(f'data_{year}.parquet')
+        if not os.path.exists('raw/'):
+                os.mkdir('raw/')
+        df.to_parquet(f'raw/data_{year}.parquet')
