@@ -1,6 +1,7 @@
+import os
 import pandas as pd
 
-for year in ["2022", "2023", "2024"]:
+for year in ["2021", "2022", "2023", "2024"]:
         url = f"https://www.retrosheet.org/gamelogs/gl{year}.zip"
 
         related_columns = [

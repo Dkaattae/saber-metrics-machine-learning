@@ -42,8 +42,8 @@ def transform_raw_data(year, raw_data_path, intermediate_path):
     team_metrics_prev = team_df.copy()
     team_metrics_prev['game_number'] = team_metrics_prev.groupby('team')['game_number'].shift(-1)
 
-    home_pitcher_columns = ['home_P_id', 'home_game_number', 'game_length', 'home_HR', 'home_HBP', 'home_BB', 'home_SO', 'home_IP']
-    away_pitcher_columns = ['away_P_id', 'away_game_number', 'game_length', 'away_HR', 'away_HBP', 'away_BB', 'away_SO', 'away_IP']
+    home_pitcher_columns = ['home_P_id', 'home_game_number', 'game_length', 'away_HR', 'away_HBP', 'away_BB', 'away_SO', 'home_IP']
+    away_pitcher_columns = ['away_P_id', 'away_game_number', 'game_length', 'home_HR', 'home_HBP', 'home_BB', 'home_SO', 'away_IP']
 
     pitch_columns = ['P_id', 'game_number', 'game_length', 'HR', 'HBP', 'BB', 'SO', 'IP']
 
@@ -92,7 +92,7 @@ def transform_raw_data(year, raw_data_path, intermediate_path):
     return (df_season, df_season_p)
 
 if __name__ == "__main__":
-    year_list = ['2022', '2023', '2024']
+    year_list = ['2021', '2022', '2023', '2024']
     df_season = pd.DataFrame()
     df_season_p = pd.DataFrame()
     if not os.path.exists('intermediate/'):

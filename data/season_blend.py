@@ -3,7 +3,10 @@ import pandas as pd
 
 # tau is the number of games, when you equally treat previous season and current season.
 # try 20-40 out of 162 games.
-def blend_season_and_current(year, tau=20):
+# FIP_mean_adj is the value that if the pitcher does not have a previous season. 
+# FIP median is around 4, 75% is 4.5.
+
+def blend_season_and_current(year, tau_team=20, tau_pitcher = 50, FIP_mean_adj=4.2):
     # data path
     current_data_path=f'intermediate/cumsum_season_{year}.parquet'
     season_team_path='intermediate/team_season.parquet'
@@ -31,8 +34,8 @@ def blend_season_and_current(year, tau=20):
 
     for col in ['OPS', 'FPCT']:
         merged[f'home_{col}_blend'] = (merged['home_game_number'] * merged[f'home_{col}'] + 
-            tau * merged[f'{col}_home_prev']
-            ) / (merged['home_game_number'] + tau)
+            tau_team * merged[f'{col}_home_prev']
+            ) / (merged['home_game_number'] + tau_team)
 
     merged = merged.merge(prev_df, left_on = 'away_team', \
             right_on="team", how="left")
@@ -44,8 +47,8 @@ def blend_season_and_current(year, tau=20):
     })
     for col in ['OPS', 'FPCT']:
         merged[f'away_{col}_blend'] = (merged['away_game_number'] * merged[f'away_{col}'] + 
-            tau * merged[f'{col}_away_prev']
-            ) / (merged['away_game_number'] + tau)
+            tau_team * merged[f'{col}_away_prev']
+            ) / (merged['away_game_number'] + tau_team)
 
 
     prevp_df = pitcher_df[pitcher_df['season'] == str(int(year) - 1)]
@@ -58,10 +61,10 @@ def blend_season_and_current(year, tau=20):
         "FIP": "FIP_home_prev",
         "season": "season_P_home"
     })
-
+    merged['FIP_home_prev'] = merged['FIP_home_prev'].fillna(FIP_mean_adj)
     merged[f'home_FIP_blend'] = (merged['home_game_number'] * merged[f'home_FIP'] + 
-            tau * merged[f'FIP_home_prev']
-            ) / (merged['home_game_number'] + tau)
+            tau_pitcher * merged[f'FIP_home_prev']
+            ) / (merged['home_game_number'] + tau_pitcher)
 
     merged = merged.merge(prevp_df, left_on = 'away_P_id', \
             right_on="P_id", how="left")
@@ -70,10 +73,10 @@ def blend_season_and_current(year, tau=20):
         "FIP": "FIP_away_prev",
         "season": "season_P_away"
     })
-
+    merged['FIP_away_prev'] = merged['FIP_away_prev'].fillna(FIP_mean_adj)
     merged[f'away_FIP_blend'] = (merged['away_game_number'] * merged[f'away_FIP'] + 
-            tau * merged[f'FIP_away_prev']
-            ) / (merged['away_game_number'] + tau)
+            tau_pitcher * merged[f'FIP_away_prev']
+            ) / (merged['away_game_number'] + tau_pitcher)
 
 
     needed_cols = ['date', 'dayofweek', 'away_team', 'away_game_number', \
@@ -83,12 +86,11 @@ def blend_season_and_current(year, tau=20):
             'away_FIP_blend', 'away_FPCT_blend', 'home_won']
 
     final_df = merged[needed_cols]
-    final_df = final_df.fillna(0)
     final_df.to_parquet(final_path)
 
     return None
 
 if __name__ == "__main__":
-    year_list = ['2023', '2024']
+    year_list = ['2022', '2023', '2024']
     for year in year_list:
         blend_season_and_current(year)
