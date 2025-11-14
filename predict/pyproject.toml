@@ -1,18 +1,19 @@
 [project]
-name = "saber-metrics-machine-learning"
+name = "predict"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "hyperopt>=0.2.7",
-    "jupyter>=1.1.1",
-    "matplotlib>=3.10.7",
-    "numpy>=2.3.4",
+    "fastapi>=0.121.2",
     "pandas>=2.3.3",
-    "pybaseball>=2.2.7",
-    "python-dotenv>=1.2.1",
+    "pydantic>=2.12.4",
     "scikit-learn>=1.7.2",
-    "seaborn>=0.13.2",
+    "uvicorn[standard]>=0.38.0",
     "xgboost>=3.1.1",
+]
+
+[dependency-groups]
+dev = [
+    "requests>=2.32.5",
 ]

@@ -5,12 +5,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-
-def transform_raw_data(year, raw_data_path, intermediate_path):
-    data = pd.read_parquet(raw_data_path)
-
-    data_columns = ['date', 'dayofweek', 'away_team', 'away_game_number', 'away_league', 'home_team', 'home_game_number', 'home_league', \
-                    'home_score', 'away_score', 'park_id', 'away_P_id', 'home_P_id']
+def build_team_metrics(data):
+    
     away_columns = ['away_team', 'away_game_number', 'away_AB', 'away_H', 'away_2B', 'away_3B', 'away_HR', 'away_SF', 'away_HBP', 'away_BB', 'away_SO', \
                 'away_p_cnt', 'away_putouts', 'away_assists', 'away_errors']
     home_columns = ['home_team', 'home_game_number', 'home_AB', 'home_H', 'home_2B', 'home_3B', 'home_HR', \
@@ -31,17 +27,36 @@ def transform_raw_data(year, raw_data_path, intermediate_path):
     team_df = team_df.sort_values(['team','game_number'])
 
     cum_cols = ['AB','H','2B','3B','HR','SF','HBP','BB', 'putouts', 'assists', 'errors']
-    team_df[cum_cols] = team_df.groupby('team')[cum_cols].cumsum().shift(fill_value=0)
+    team_df[[f"{c}_prev" for c in cum_cols]] = (
+            team_df.groupby('team')[cum_cols]
+                    .cumsum()
+                    .shift(fill_value=0)
+    )
 
-    team_df['OBP'] = (team_df['H'] + team_df['BB'] + team_df['HBP']) / (team_df['AB'] + team_df['BB'] + team_df['HBP'] + team_df['SF'])
-    team_df['SLG'] = (team_df['H'] + 2*team_df['2B'] + 3*team_df['3B'] + 4*team_df['HR']) / team_df['AB']
-    team_df['OPS'] = team_df['OBP'] + team_df['SLG']
+    team_df['OBP_prev'] = (
+        (team_df['H_prev'] + team_df['BB_prev'] + team_df['HBP_prev']) / 
+        (team_df['AB_prev'] + team_df['BB_prev'] + team_df['HBP_prev'] + team_df['SF_prev'])
+    )
+    team_df['SLG_prev'] = (
+        (team_df['H_prev'] + 2*team_df['2B_prev'] + 
+            3*team_df['3B_prev'] + 4*team_df['HR_prev']) / 
+            team_df['AB_prev']
+        ) 
+    team_df['OPS_prev'] = team_df['OBP_prev'] + team_df['SLG_prev']
 
-    team_df['FPCT'] = (team_df['putouts'] + team_df['assists']) / (team_df['putouts'] + team_df['assists'] + team_df['errors'])
+    team_df['FPCT_prev'] = (
+        (team_df['putouts_prev'] + team_df['assists_prev']) / 
+        (team_df['putouts_prev'] + team_df['assists_prev'] + team_df['errors_prev'])
+    )
+    output = team_df[["team", "game_number", "OPS_prev", "FPCT_prev"]].copy()
+    output = output.rename(columns={
+        "OPS_prev": "OPS",
+        "FPCT_prev": "FPCT"
+    })
 
-    team_metrics_prev = team_df.copy()
-    team_metrics_prev['game_number'] = team_metrics_prev.groupby('team')['game_number'].shift(-1)
+    return team_df, output
 
+def build_pitcher_metrics(data):
     home_pitcher_columns = ['home_P_id', 'home_game_number', 'game_length', 'away_HR', 'away_HBP', 'away_BB', 'away_SO', 'home_IP']
     away_pitcher_columns = ['away_P_id', 'away_game_number', 'game_length', 'home_HR', 'home_HBP', 'home_BB', 'home_SO', 'away_IP']
 
@@ -55,7 +70,7 @@ def transform_raw_data(year, raw_data_path, intermediate_path):
     homep_df = homep_df.rename(columns=rename_homep)
 
     awayp_df = data[[c for c in away_pitcher_columns if c!= 'away_IP']].copy()
-    awayp_df['away_IP'] = homep_df['game_length'].apply(lambda x: math.ceil(x / 6))
+    awayp_df['away_IP'] = awayp_df['game_length'].apply(lambda x: math.ceil(x / 6))
     awayp_df = awayp_df.rename(columns=rename_awayp)
 
     pitcher_df = pd.concat([homep_df, awayp_df], ignore_index=True)
@@ -63,32 +78,56 @@ def transform_raw_data(year, raw_data_path, intermediate_path):
     pitcher_df = pitcher_df.sort_values(['P_id','game_number'])
 
     cum_cols = ['HR','HBP', 'BB', 'SO', 'IP']
-    pitcher_df[cum_cols] = pitcher_df.groupby('P_id')[cum_cols].cumsum().shift(fill_value=0)
+    pitcher_df[[f"{c}_prev" for c in cum_cols]] = (
+        pitcher_df.groupby('P_id')[cum_cols]
+                .cumsum()
+                .shift(fill_value=0)
+    )
 
     fip_constant = 3.1
-    pitcher_df['FIP'] = (13*pitcher_df['HR'] + 3*(pitcher_df['BB'] + pitcher_df['HBP']) - 2*pitcher_df['SO']) / pitcher_df['IP'] + fip_constant
+    pitcher_df['FIP_prev'] = ((13*pitcher_df['HR_prev'] + 
+            3*(pitcher_df['BB_prev'] + pitcher_df['HBP_prev']) 
+            - 2*pitcher_df['SO_prev']) / pitcher_df['IP_prev'].replace(0,np.nan)
+             + fip_constant
+    )
+    output = pitcher_df[["P_id", "game_number", "FIP_prev"]].rename(
+        columns={"FIP_prev": "FIP"}
+    )
 
-    pitcher_metrics_prev = pitcher_df.copy()
-    pitcher_metrics_prev['game_number'] = pitcher_metrics_prev.groupby('P_id')['game_number'].shift(-1)
+    return pitcher_df, output
 
-    df_merged = data[data_columns].merge(team_metrics_prev.add_prefix('home_'), on=['home_team', 'home_game_number'], how='left')
-    df_merged = df_merged.merge(team_metrics_prev.add_prefix('away_'), on=['away_team', 'away_game_number'], how='left')
-    df_merged = df_merged.merge(pitcher_metrics_prev.add_prefix('home_'), on=['home_P_id', 'home_game_number'], how='left')
-    df_merged = df_merged.merge(pitcher_metrics_prev.add_prefix('away_'), on=['away_P_id', 'away_game_number'], how='left')
+def merge_all_metrics(data, team_metrics, pitcher_metrics, data_columns):
+    df = data[data_columns].copy()
+    df = df.merge(team_metrics.add_prefix('home_'), on=['home_team', 'home_game_number'], how='left')
+    df = df.merge(team_metrics.add_prefix('away_'), on=['away_team', 'away_game_number'], how='left')
+    df = df.merge(pitcher_metrics.add_prefix('home_'), on=['home_P_id', 'home_game_number'], how='left')
+    df = df.merge(pitcher_metrics.add_prefix('away_'), on=['away_P_id', 'away_game_number'], how='left')
 
-    df_merged['home_won'] = (df_merged['home_score']>df_merged['away_score']).astype(int)
-    df_current = df_merged[data_columns+['home_OPS', 'home_FIP', 'home_FPCT', 'away_OPS', 'away_FIP', 'away_FPCT', 'home_won']]
+    df['home_won'] = (df['home_score']>df['away_score']).astype(int)
+    return df
 
+def transform_raw_data(year, raw_data_path, intermediate_path):
+    data = pd.read_parquet(raw_data_path)
+    data_columns = ['date', 'dayofweek', 'away_team', 'away_game_number', 'away_league', 'home_team', 'home_game_number', 'home_league', \
+                    'home_score', 'away_score', 'park_id', 'away_P_id', 'home_P_id']
+    team_df, team_metrics = build_team_metrics(data)
+    pitcher_df, pitcher_metrics = build_pitcher_metrics(data)
+    
+    # team_df = team_df.rename(columns={c: c.replace('_prev','') for c in df.columns if '_prev' in c})
+    # pitcher_df = pitcher_df.rename(columns={c: c.replace('_prev','') for c in df.columns if '_prev' in c})
+
+    df_current = merge_all_metrics(data, team_metrics, pitcher_metrics, data_columns)
+    
     df_current.to_parquet(intermediate_path)
 
-    last_idx = team_df.groupby("team")["game_number"].idxmax()
-    df_season = team_df.loc[last_idx].reset_index(drop=True)
+    last_idx = team_metrics.groupby("team")["game_number"].idxmax()
+    df_season = team_metrics.loc[last_idx].reset_index(drop=True)
     df_season['season'] = year
 
-    last_idx_p = pitcher_df.groupby("P_id")["game_number"].idxmax()
-    df_season_p = pitcher_df.loc[last_idx_p].reset_index(drop=True)
+    last_idx_p = pitcher_metrics.groupby("P_id")["game_number"].idxmax()
+    df_season_p = pitcher_metrics.loc[last_idx_p].reset_index(drop=True)
     df_season_p['season'] = year
-
+    
     return (df_season, df_season_p)
 
 if __name__ == "__main__":
