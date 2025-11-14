@@ -24,15 +24,15 @@ def prepare_feature(raw_data):
     dicts = df_features.to_dict(orient='records')
     return dicts
 
-def predict_single(raw_data):
+def predict_single(raw_data, win_threshold=0.51, lose_threshold=0.49):
     model_path = 'xgb_pipeline.pkl'
     print("cwd:", os.getcwd())
     print("exists?", os.path.exists(model_path))
     model_pipeline = load_model(model_path)
     dicts = prepare_feature(raw_data)
     prediction = model_pipeline.predict_proba(dicts)[:,1]
-    pred_win = prediction > 0.7
-    pred_lose = prediction < 0.3
+    pred_win = prediction > win_threshold
+    pred_lose = prediction < lose_threshold
     result = {
         'win_prob': prediction,
         'predicted_win': pred_win,

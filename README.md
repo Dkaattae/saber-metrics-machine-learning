@@ -61,17 +61,51 @@ there are 162 games for each team total in regular season. set tau to 20 - 40 is
 **Classification**.  
 target is if home team won. that is home score > away score.  
 
-*Logistic regression*.  
-using DictVectorizer to one hot encoded categorical features and Scaler to scale numerical features.  
-rmse: 0.50.  
+*Decision Tree*.  
+using DictVectorizer to one hot encoded categorical features  
+auc: 0.557.  
 
 *Randowm Forest*.  
-n_estimator=200, max_depth=5.  
-rmse: 0.61.  
+n_estimator=200, max_depth=3,min_samples_leaf=7   
+auc: 0.580.  
 
 *XGBoost*    
-rmse:   
+auc: 0.577  
 
 ## Hyperopt
 
+## Threshold
+win threshold = 0.51.  
+lose threshold = 0.49.  
+F1 = 0.68.  
+if predicted in the middle, print not sure.  
+
 ## Deployment
+```
+cd predict
+docker build -t myfastapi .
+docker run --rm -p 9696:9696 myfastapi
+```
+after spinning up the docker container,   
+open another terminal, run    
+`python test.py`.  
+
+or copy   
+example test data.  
+```
+{
+    "date": 20250328,
+    "dayofweek": "Fri",
+    "away_league": "NL",
+    "home_league": "NL",
+    "park_id": "CHI12",
+    "home_OPS_blend": 0.7960,
+    "home_FIP_blend": 4.6507,
+    "home_FPCT_blend": 0.9866,
+    "away_OPS_blend": 0.8829,
+    "away_FIP_blend": 3.0032,
+    "away_FPCT_blend": 0.9847
+}
+```
+to localhost:9696/docs.  
+try it out

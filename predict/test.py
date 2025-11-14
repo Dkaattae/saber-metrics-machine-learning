@@ -3,18 +3,19 @@ import requests
 url = 'http://localhost:9696/predict'
 
 new_data = {
-        'date': 20250320,
-        'dayofweek': 'Thu',
-        'away_league': 'NL',
-        'home_league': 'NL',
-        'park_id': 'CHI12',
-        'home_OPS_blend': 0.85,
-        'home_FIP_blend': 3.9,
-        'home_FPCT_blend': 0.976,
-        'away_OPS_blend': 0.78,
-        'away_FIP_blend': 4.9,
-        'away_FPCT_blend': 0.985
-    }
+    "date": 20250328,
+    "dayofweek": "Fri",
+    "away_league": "NL",
+    "home_league": "NL",
+    "park_id": "CHI12",
+    "home_OPS_blend": 0.7960,
+    "home_FIP_blend": 4.6507,
+    "home_FPCT_blend": 0.9866,
+    "away_OPS_blend": 0.8829,
+    "away_FIP_blend": 3.0032,
+    "away_FPCT_blend": 0.9847
+}
+
 
 response = requests.post(url, json=new_data)
 print(response)
