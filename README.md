@@ -7,19 +7,20 @@ Baseball has over a century of statistics, and traditional Sabermetrics metrics 
 This project applies machine learning models, including logistic regression, random forests and XGBoost, to historical and engineered features from baseball data. The pipeline covers data processing, model training, and feature importance analysis, with a FastAPI service for serving predictions.   
 
 ## Dataset
-retrosheet regular season game log.  
-run download.py to download related raw data.  
-    path: data/raw/*.parqueet   
-run transform.py to transform raw data into season aggregated data    
-    path: data/intermediate/*.parquet.  
-run season_blend.py to blend current season aggregated data with previous
-season data.   
-    path: data/final/*.parquet.  
+retrosheet regular season game log.     
+contains game level data. see data/glfields.txt for explanation
 
-note: paths could be passed into functions. functions should be refactored later.    
+## Steps
+for training.  
+```
+pip install -r requirements.txt
+make
+```
+for predicting.  
+see deployment.  
 
 ## Features
-categorical features: date, dayofweek, away team, away team league, home team, home team league, park id, away starting pitcher id, home starting pitcher id.   
+categorical features: date, dayofweek, away team league, home team league, park id.    
 numerical features (engineered): home_OPS_blend, away_OPS_blend, home_FPCT_blend, away_FPCT_blend, home_FIP_blend, away_FIP_blend.   
 all categorical features are game metadata, should be able to know before a game starts.    
 all numerical features are combination of season to date metrics and previous season metrics.    
@@ -50,7 +51,7 @@ after calculated team/pitcher aggregated data, then join to the original game lo
 note: if in a game home team has 5 pitchers played, the metrics has all metrics calculated onto the starting pitcher for simplicity.   
     it would require play by play data to get data for each pitcher. and hard to predict pitcher appreance other than starting pitcher.   
  
-**Blend**.  
+**Blend**.    
 the first few games, team has not played much yet, data are not sufficient to predict anything. so i blend in previous season data, with bayesian method.   
 blend_metrics = (game_number*metric_current + tau*metric_previous) 
             / (game_number + tau).  
@@ -73,6 +74,7 @@ auc: 0.580.
 auc: 0.577  
 
 ## Hyperopt
+
 
 ## Threshold
 win threshold = 0.51.  
