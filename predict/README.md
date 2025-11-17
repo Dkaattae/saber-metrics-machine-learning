@@ -30,8 +30,8 @@ flyctl apps destroy <app-name>
 ```
 in the list, find the app going to destroyed. copy the name, paste after destroy.   
 
-![test_deployment](test_deployment.png)
+![test_deployment](images/test_deployment.png)
 
-![fastapi_in_cloud](fastapi_in_cloud.png)
+![fastapi_in_cloud](images/fastapi_in_cloud.png)
 
-![flyio_logs](flyio_logs.png)
+![flyio_logs](images/flyio_logs.png)
