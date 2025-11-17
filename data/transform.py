@@ -134,15 +134,17 @@ if __name__ == "__main__":
     year_list = ['2021', '2022', '2023', '2024']
     df_season = pd.DataFrame()
     df_season_p = pd.DataFrame()
-    if not os.path.exists('intermediate/'):
-        os.mkdir('intermediate/')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(BASE_DIR, 'intermediate')
+    folder = os.path.dirname(file_path)
+    os.makedirs(folder, exist_ok=True)
     for year in year_list:
-        raw_data_path = f'raw/data_{year}.parquet'
-        intermediate_path = f'intermediate/cumsum_season_{year}.parquet'
+        raw_data_path = os.path.join(BASE_DIR, 'raw', f'data_{year}.parquet')
+        intermediate_path = os.path.join(BASE_DIR, 'intermediate', f'cumsum_season_{year}.parquet')
         df_season_year, df_season_p_year = transform_raw_data(
             year, raw_data_path, intermediate_path)
         df_season = pd.concat([df_season, df_season_year], ignore_index=True)
         df_season_p = pd.concat([df_season_p, df_season_p_year], ignore_index=True)
-    df_season.to_parquet('intermediate/team_season.parquet')
-    df_season_p.to_parquet('intermediate/pitcher_season.parquet')
+    df_season.to_parquet(os.path.join(BASE_DIR, 'intermediate', 'team_season.parquet'))
+    df_season_p.to_parquet(os.path.join(BASE_DIR, 'intermediate', 'pitcher_season.parquet'))
 

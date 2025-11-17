@@ -52,6 +52,8 @@ for year in ["2021", "2022", "2023", "2024"]:
 
         df = pd.read_csv(url, header=None, usecols=col_indices)
         df.columns = col_names
-        if not os.path.exists('raw/'):
-                os.mkdir('raw/')
-        df.to_parquet(f'raw/data_{year}.parquet')
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(BASE_DIR, 'raw')
+        folder = os.path.dirname(file_path)
+        os.makedirs(folder, exist_ok=True)
+        df.to_parquet(os.path.join(file_path, f'data_{year}.parquet'))

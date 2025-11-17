@@ -27,8 +27,6 @@ all numerical features are combination of season to date metrics and previous se
 if no previous season, previous season metrics is 0.   
 if no current season previous metrics, current season metrics is 0.   
 
-note: there might be some issues in divided by 0 when calculating FPCT
-
 
 ### SaberMetrics: 
 **Metrics**
@@ -60,7 +58,7 @@ there are 162 games for each team total in regular season. set tau to 20 - 40 is
 
 ## Models
 **Classification**.  
-target is if home team won. that is home score > away score.  
+target is home team won. that is home score > away score.  
 
 *Decision Tree*.  
 using DictVectorizer to one hot encoded categorical features  
@@ -74,7 +72,7 @@ auc: 0.580.
 auc: 0.577  
 
 ## Hyperopt
-
+using package hyperopt, search parameter space to find best auc score.  
 
 ## Threshold
 win threshold = 0.51.  
@@ -111,3 +109,20 @@ example test data.
 ```
 to localhost:9696/docs.  
 try it out
+
+note: i intend to copy the model pickle into predict folder. 
+predict script has a function load_model, which should load it from correct path, where the training model saved.    
+in order to make things work separately, i copied model into predict folder, and into docker container.   
+
+# Next Step
+1, refactor code.  
+2, keep working on feature engineering    
+    i aggregated all metrics as team, which makes model general.   
+    but, previous season data might be less useful because players might change team.   
+    in order to get accurate team metrics, i need to find out team rosters for each game. then aggregated personal metrics and get weighted average for team metrics.    
+    another improvement is to find out pitcher hand split. pitcher hand is given in player metadata. i will need to go to play by play data to find out batter metrics split by pitcher hand.   
+3, track experiment.   
+    using MLFlow to track experiments.   
+4, add tests.    
+    feature engineering could get really complicated, add test to see if everything works as expected.    
+5, deploy on cloud.  

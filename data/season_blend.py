@@ -8,12 +8,15 @@ import pandas as pd
 
 def blend_season_and_current(year, tau_team=20, tau_pitcher = 50, FIP_mean_adj=4.2):
     # data path
-    current_data_path=f'intermediate/cumsum_season_{year}.parquet'
-    season_team_path='intermediate/team_season.parquet'
-    season_pitcher_path='intermediate/pitcher_season.parquet'
-    final_path=f'final/{year}_data.parquet'
-    if not os.path.exists('final/'):
-        os.mkdir('final/')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(BASE_DIR, 'final')
+    folder = os.path.dirname(file_path)
+    os.makedirs(folder, exist_ok=True)
+    
+    current_data_path=os.path.join(BASE_DIR, 'intermediate', f'cumsum_season_{year}.parquet')
+    season_team_path=os.path.join(BASE_DIR, 'intermediate', 'team_season.parquet')
+    season_pitcher_path=os.path.join(BASE_DIR, 'intermediate', 'pitcher_season.parquet')
+    final_path=os.path.join(BASE_DIR, 'final', f'{year}_data.parquet')
 
     current_df = pd.read_parquet(current_data_path)
     season_df = pd.read_parquet(season_team_path)

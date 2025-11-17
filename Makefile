@@ -1,4 +1,4 @@
-all: save_model
+all: hyperopt
 
 download:
 	python data/download_data.py

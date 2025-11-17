@@ -11,7 +11,9 @@ def load_pickle(filename):
     with open(filename, "rb") as f_in:
         return pickle.load(f_in)
 
-data_path = '../data/vector/'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "..", "data")
+data_path = os.path.join(DATA_DIR, 'vector')
 X_train, y_train = load_pickle(os.path.join(data_path, "train.pkl"))
 X_val, y_val = load_pickle(os.path.join(data_path, "val.pkl"))
 
@@ -73,7 +75,7 @@ pipeline = Pipeline([
     ('xgb', xgb_model)
 ])
 
-filename = 'xgb_pipeline.pkl'
+filename = os.path.join(BASE_DIR, 'xgb_pipeline.pkl')
 with open(filename, 'wb') as file:
     pickle.dump(pipeline, file)
 
