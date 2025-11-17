@@ -1,6 +1,7 @@
 import requests
 
 url = 'http://localhost:9696/predict'
+# url = 'https://predict-cool-mountain-8274.fly.dev/predict'
 
 new_data = {
     "date": 20250328,

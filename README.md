@@ -110,9 +110,14 @@ example test data.
 to localhost:9696/docs.  
 try it out
 
+
 note: i intend to copy the model pickle into predict folder. 
 predict script has a function load_model, which should load it from correct path, where the training model saved.    
 in order to make things work separately, i copied model into predict folder, and into docker container.   
+
+# Deploy in cloud
+see predict/README
+
 
 # Next Step
 1, refactor code.  
@@ -125,4 +130,3 @@ in order to make things work separately, i copied model into predict folder, and
     using MLFlow to track experiments.   
 4, add tests.    
     feature engineering could get really complicated, add test to see if everything works as expected.    
-5, deploy on cloud.  
